@@ -53,22 +53,20 @@ class Lift {
   }
 
   getStopRequests(): StopRequest[] {
-    return this.people.map(destination => ({destination}));
+    return this.people.map(destination => new StopRequest(destination));
   }
 
   travel(stopRequests: StopRequest[]) {
     const stopsAhead = stopRequests.filter(request => this.isTravellingInDirectionOf(request.destination));
     const stopsWithSameDirection = stopRequests.filter(request => request.direction === this.direction || request.direction === undefined);
     const stopsAheadWithSameDirection = stopsAhead.filter(request => stopsWithSameDirection.includes(request));
-    if (stopsAheadWithSameDirection.length === 0) {
-      if(stopsAhead.length === 0){
-        this.changeDirection();
-      }else{
-        this.forceTravel(stopsAhead.sort((request2, request1) => this.compareLevelDistance(request1.destination, request2.destination))[0].destination)
-      }
-    } else {
-      this.forceTravel(stopsAheadWithSameDirection.sort((request1, request2) => this.compareLevelDistance(request1.destination, request2.destination))[0].destination)
 
+    if (stopsAhead.length === 0) {
+      this.changeDirection();
+    } else if (stopsAheadWithSameDirection.length === 0) {
+      this.forceTravel(StopRequest.farthest(stopsAhead, this.level).destination)
+    } else {
+      this.forceTravel(StopRequest.nearest(stopsAheadWithSameDirection, this.level).destination)
     }
   }
 
@@ -109,19 +107,38 @@ class House {
   getStopRequests(): StopRequest[] {
     return [DIRECTION.UP, DIRECTION.DOWN].flatMap(direction => this.floors
       .filter(floor => floor.isSomeoneWaitingFor(direction))
-      .map(floor => ({destination: floor.level, direction}))
+      .map(floor => new StopRequest(floor.level, direction))
     );
   }
-  draw(lift: Lift){
-    console.log(this.floors.map(floor => `${floor.level}  |${lift.level === floor.level ? (lift.direction === DIRECTION.UP ? "^":"V") : " "}| ${floor.queue.toString()}`).reverse().join("\n"));
+
+  draw(lift: Lift) {
+    console.log(this.floors.map(floor => `${floor.level}  |${lift.level === floor.level ? (lift.direction === DIRECTION.UP ? '^' : 'V') : ' '}| ${floor.queue.toString()}`).reverse().join('\n'));
     console.log(`LIFT: ${lift.people.toString()}\n--------------\n\n`)
   }
 
 }
 
-interface StopRequest {
-  destination: number,
-  direction?: DIRECTION,
+class StopRequest {
+  destination: number;
+  direction?: DIRECTION;
+
+  constructor(destination: number, direction?: DIRECTION) {
+    this.destination = destination;
+    this.direction = direction;
+  }
+
+  static extreme(stops: StopRequest[], from: number, type: 'nearest' | 'farthest'){
+    return stops.sort((request2, request1) =>
+      Math.abs((type === 'farthest' ? request1 : request2).destination - from)
+      - Math.abs((type === 'farthest' ? request2 : request1).destination - from)
+    )[0];
+  }
+  static farthest(stops: StopRequest[], from: number){
+    return StopRequest.extreme(stops, from, 'farthest');
+  }
+  static nearest(stops: StopRequest[], from: number){
+    return StopRequest.extreme(stops, from, 'nearest');
+  }
 }
 
 class Floor {
