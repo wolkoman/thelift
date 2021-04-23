@@ -8,8 +8,6 @@ export const theLift = (queues: number[][], capacity: number): number[] => {
     lift.letPeopleLeave();
   }
   lift.forceTravel(0);
-
-  queues = [];
   return lift.history;
 }
 
