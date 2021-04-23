@@ -80,12 +80,12 @@ class Lift {
     this.people = this.people.filter(destination => destination !== this.level);
   }
 
-  private changeDirection() {
-    this.direction = this.direction === DIRECTION.UP ? DIRECTION.DOWN : DIRECTION.UP;
-  }
-
   hasPeople() {
     return this.people.length !== 0;
+  }
+
+  private changeDirection() {
+    this.direction = this.direction === DIRECTION.UP ? DIRECTION.DOWN : DIRECTION.UP;
   }
 }
 
@@ -111,11 +111,6 @@ class House {
     );
   }
 
-  draw(lift: Lift) {
-    console.log(this.floors.map(floor => `${floor.level}  |${lift.level === floor.level ? (lift.direction === DIRECTION.UP ? '^' : 'V') : ' '}| ${floor.queue.toString()}`).reverse().join('\n'));
-    console.log(`LIFT: ${lift.people.toString()}\n--------------\n\n`)
-  }
-
 }
 
 class StopRequest {
@@ -127,16 +122,18 @@ class StopRequest {
     this.direction = direction;
   }
 
-  static extreme(stops: StopRequest[], from: number, type: 'nearest' | 'farthest'){
+  static extreme(stops: StopRequest[], from: number, type: 'nearest' | 'farthest') {
     return stops.sort((request2, request1) =>
       Math.abs((type === 'farthest' ? request1 : request2).destination - from)
       - Math.abs((type === 'farthest' ? request2 : request1).destination - from)
     )[0];
   }
-  static farthest(stops: StopRequest[], from: number){
+
+  static farthest(stops: StopRequest[], from: number) {
     return StopRequest.extreme(stops, from, 'farthest');
   }
-  static nearest(stops: StopRequest[], from: number){
+
+  static nearest(stops: StopRequest[], from: number) {
     return StopRequest.extreme(stops, from, 'nearest');
   }
 }
